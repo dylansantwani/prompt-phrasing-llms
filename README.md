@@ -1,6 +1,6 @@
 # Effect of Prompt Phrasing on LLMs: Qwen2.5, GPT-4o, DeepSeek, Llama
 
-Dylan Santwani · February 2025 · [PDF](effect-of-prompt-phrasing-on-llms.pdf) · [Web](https://dylansantwani.github.io/prompt-phrasing/)
+Dylan Santwani · February 2025 · [PDF](effect-of-prompt-phrasing-on-llms.pdf)
 
 ## Abstract
 
