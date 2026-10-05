@@ -1,78 +1,54 @@
-# Effect of Prompt Phrasing on LLMs: Qwen2.5, GPT-4o, DeepSeek, Llama
+# Effect of Prompt Phrasing on LLMs: A Pilot Study of SAT-Style Question Formatting
 
-Dylan Santwani · February 2025 · [PDF](effect-of-prompt-phrasing-on-llms.pdf)
+Dylan Santwani · pilot data collected February 2025 · revised October 2026 · [PDF](effect-of-prompt-phrasing-on-llms.pdf)
 
-## Abstract
+Does a question written like an SAT item get a clearer worked solution than the same question written as plain prose? Four models (GPT-4o, DeepSeek-R1, Qwen2.5 72B, Llama 3 70B) answered two released SAT items, an algebra word problem and a reading item, in their original form and as a Gemini paraphrase. Each of the 16 responses was hand-scored out of 18.
 
-Many open models, such as Qwen2.5, Llama and DeepSeek (R1), as well as GPT-4o and close clones of GPT-2, are trained on data drawn largely from the internet. A large part of that data is textbook-like questions, most of them in SAT style. Those questions follow formatting guidelines that make them easier for a test-taker to read and understand. Models tend to be more accurate when a prompt resembles their training data, so I speculated that phrasing a prompt like a textbook question would produce more accurate results with clearer answers.
+## Findings
 
-If that holds, a small model (3B or 7B) placed between the user and the main LLM could rewrite prompts into that form and improve the results.
-
-## Method
-
-Each model received the question as an image, preceded by this system prompt:
-
-> Explain your thoughts in solving this question. Solve it in 5 steps, and explain each step. Make your ending answer clear.
-
-No answer choices were given to any model. Each question was asked twice: once in its original SAT format and once rewritten without formatting (the rewrite was produced with Gemini). I hand-scored every answer:
-
-| Category | Points | Awarded for |
-|---|---|---|
-| Clarity | 7 | How clear each step is |
-| Understanding | 3 | Understanding what the question asks for and how to get there |
-| Format | 3 | Giving the answer in a form that matches one of the (hidden) answer choices |
-| Answer | 5 | Correct (5) or incorrect (0) |
-
-Question 1 is an algebra word problem that tests logical reasoning, algebra and real-world problem solving. Question 2 is a reading question that tests comprehension, vocabulary in context and inference.
-
-## Results
-
-Scores out of 18 ([scores.csv](scores.csv)):
-
-| Model | Q1 formatted | Q1 unformatted | Q2 formatted | Q2 unformatted |
+| | Q1 algebra, original | Q1 algebra, rewritten | Q2 reading, original | Q2 reading, rewritten |
 |---|---|---|---|---|
 | GPT-4o | 16 | 14 | 18 | 17 |
-| DeepSeek | 16 | 15 | 17 | 17 |
-| Qwen2.5 | 18 | 15 | 17 | 16 |
+| DeepSeek-R1 | 16 | 15 | 17 | 17 |
+| Qwen2.5 72B | 18 | 15 | 17 | 16 |
 | Llama 3 70B | 17 | 13 | 16 | 16 |
-| Mean | 16.75 | 14.25 | 17.0 | 16.5 |
+| Mean | 16.75 | 14.25 | 17.00 | 16.50 |
 
-Every model answered both questions correctly in both versions. The differences are in how the answer was reached.
+- Every response was correct, so the differences are in how clear the explanations were, not in accuracy.
+- On the algebra item, all four models scored lower on the rewrite, and 80% of the drop was in clarity. On the reading item, two models did not change.
+- With four paired observations per item, the algebra result is not statistically significant: the exact one-sided p = 0.0625 is the smallest value four pairs can produce.
+- The algebra rewrite changed far more wording than the reading rewrite. That alone could explain the difference between the two items, and the paper sets out this and five other confounds.
 
-On Question 1 (algebra), every model's clarity dropped without the formatting, and the mean fell by 2.5 points. Llama 3 lost the most, 7 to 3 on clarity. Formatting the question the way the training data does made a clear difference.
+The paper treats this as a pilot. It specifies a confirmatory study (426 AGIEval SAT items plus newly written items, five conditions that separate layout, wording, memorization and image input, and blind scoring with measured inter-rater agreement) and an evaluation plan for the small-model question-rewriting pipeline the hypothesis suggests.
 
-On Question 2 (reading), the formatting barely mattered: the mean fell by 0.5 points, from one-point drops in GPT-4o's clarity and Qwen2.5's understanding. The loss of understanding likely comes from the rewrite slightly changing the question's meaning.
+## Repository
 
-| Q1 formatted | Q1 unformatted |
+| Path | Contents |
 |---|---|
-| ![Q1 formatted](figures/q1-formatted.png) | ![Q1 unformatted](figures/q1-unformatted.png) |
+| `effect-of-prompt-phrasing-on-llms.pdf` | The current paper |
+| `paper/` | LaTeX source, bibliography, generated figures and tables |
+| `analysis/analyze.py` | Computes every number, table and data figure from the scores |
+| `data/scores.csv` | Hand scores for all 16 responses |
+| `v1/` | The original February 2025 version and its charts |
 
-| Q2 formatted | Q2 unformatted |
-|---|---|
-| ![Q2 formatted](figures/q2-formatted.png) | ![Q2 unformatted](figures/q2-unformatted.png) |
+## Rebuild
 
-## Conclusion
+Needs Python 3 with numpy, scipy and matplotlib, and [Tectonic](https://tectonic-typesetting.github.io/).
 
-These models perform noticeably differently when a question involves logical reasoning, like basic algebra. Rephrasing such a question into the common textbook format that fits the training data could produce better results. Reading-comprehension questions are much less sensitive to formatting.
+```bash
+make
+```
 
-Application: classify each incoming prompt by whether it involves logical reasoning. If it does, have a small model (7B) rewrite it into textbook form, then send it to the main model (72B).
+This regenerates `paper/figures/` and `paper/generated/` from `data/scores.csv` and then compiles the PDF. The prose reads its statistics from `paper/generated/stats.tex`, so the text cannot drift from the data.
 
-![Rewriter pipeline](figures/rewriter-pipeline.png)
-
-This fits the view in *Large Language Models: A Survey* (Minaee et al., 2024) that many LLM shortcomings, hallucination included, can be addressed with better prompt engineering. Rewriting prompts this way might also reduce hallucinations.
-
-## Limitations
-
-This is a small independent study: two questions, four models, one scorer. The scores are hand-assigned, so treat them as directional, not statistically significant. The original PDF describes the rubric as out of 15, but its four categories add up to 18, which is the scale used above. In the Q1 formatted chart Qwen2.5 is labeled 14B, and 72B elsewhere.
-
-## Cite
+## Citation
 
 ```bibtex
-@misc{santwani2025promptphrasing,
+@misc{santwani2026phrasing,
+  title  = {Effect of Prompt Phrasing on {LLMs}: A Pilot Study of {SAT}-Style Question Formatting},
   author = {Santwani, Dylan},
-  title  = {Effect of Prompt Phrasing on LLMs: Qwen2.5, GPT-4o, DeepSeek, Llama},
-  year   = {2025},
-  month  = feb,
+  year   = {2026},
+  note   = {Pilot data collected February 2025},
   url    = {https://github.com/dylansantwani/prompt-phrasing-llms}
 }
 ```
